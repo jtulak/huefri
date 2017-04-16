@@ -1,19 +1,21 @@
-# huefri
-A simple bridge to unify IKEA Tradfri and Philips Hue lights.
+# Huëfri
+A simple bridge to unify IKEA Trådfri and Philips Hue lights.
 
-Did you thought how nice it would be to control Philips Hue bulbs with IKEA Tradfri remote? This small bridge makes it possible.
+Did you thought how nice it would be to control Philips Hue bulbs with IKEA Trådfri remote? This small bridge makes it possible.
+
+![A short video with one Hue bulb, one Trådfri bulb and one Trådfri remote.](https://raw.githubusercontent.com/jtulak/huefri/master/example.gif)
 
 ## How it works
-You press a button on an IKEA remote. The paired Tradfri bulb changes its light and within one second, all other configured Hue bulbs changes too.
+You press a button on an IKEA remote. The paired Trådfri bulb changes its light and within one second, all other configured Hue bulbs changes too.
 
-It is far from ideal, but until IKEA provides us with a way how to subscribe to events on a conremote, all we can do is to watch Tradfri bulbs and repeat any change on other bublbs.
+It is far from ideal, but until IKEA provides us with a way how to subscribe to events on a conremote, all we can do is to watch Trådfri bulbs and repeat any change on other bublbs.
 
-Right now, this project supports only 1:N pairing. That means, it can watch only one Tradfri bulb (and remote) and propagate to N Hue bulbs. I don't need other Tradfri light right now, so I can't test/develop any other configuration. I'm happy to accept patches, though.
+Right now, this project supports only 1:N pairing. That means, it can watch only one Trådfri bulb (and remote) and propagate to N Hue bulbs. I don't need other Trådfri light right now, so I can't test/develop any other configuration. I'm happy to accept patches, though.
 
 ## Required HW
   * Hue bridge
-  * Tradfri gate
-  * One Tradfri bulb and a remote
+  * Trådfri gate
+  * One Trådfri bulb and a remote
   * Any number of Hue bulbs
 
 Note: I have only Color Ambiance Hue bulbs. If White Ambiance bulbs won't work out of box, I will welcome any patch!
@@ -58,5 +60,5 @@ b.connect()
 ~~~~
 
 ## TODO
-  * Add possibility to control other Tradfri bulbs too, to simulate multiple remotes on a single group of lights, something IKEA can't do yet.
+  * Add possibility to control other Trådfri bulbs too, to simulate multiple remotes on a single group of lights, something IKEA can't do yet.
 
