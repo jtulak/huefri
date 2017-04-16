@@ -1,5 +1,5 @@
 # Huëfri
-A simple bridge to unify IKEA Trådfri and Philips Hue lights.
+A simple software bridge to unify IKEA Trådfri and Philips Hue lights.
 
 Did you thought how nice it would be to control Philips Hue bulbs with IKEA Trådfri remote? This small bridge makes it possible.
 
@@ -13,7 +13,7 @@ bulbs are set to the same temperature/brightness.
 ## How it works
 You press a button on an IKEA remote. The paired Trådfri bulb changes its light and within one second, all other configured Hue bulbs changes too.
 
-It is far from ideal, but until IKEA provides us with a way how to subscribe to events on a conremote, all we can do is to watch Trådfri bulbs and repeat any change on other bublbs.
+It is far from ideal, but until IKEA provides us with a way how to subscribe to events on a remote, all we can do is to watch Trådfri bulbs and repeat any change on other bublbs.
 
 Right now, this project supports only 1:N pairing. That means, it can watch only one Trådfri bulb (and remote) and propagate to N Hue bulbs. I don't need other Trådfri light right now, so I can't test/develop any other configuration. I'm happy to accept patches, though.
 
@@ -43,7 +43,7 @@ This is a template for `config.json` file that has to be located next to `huefri
 "hue":{
 	"addr":"ADDR",
 	"secret": "SECRET",
-	"controlled": [LIST,OF,HUE,LIGHTS,TO,CONTROL (indexed from 1) ]
+	"controlled": [LIST,OF,HUE,BULBS,TO,CONTROL (indexed from 1) ]
 	},
 "tradfri":{
 	"addr": "ADDR",
@@ -59,8 +59,9 @@ from phue import Bridge
 
 b = Bridge('ip_of_your_bridge')
 
-# Press the button on the bridge and call connect() within 30 seconds (this only needs to be run a single time)
-# The secret will be saved into /Users/Honza/.python_hue file.
+# Press the button on the bridge and call connect() 
+# within 30 seconds (this only needs to be run a single time).
+# The secret will be saved into HOME_DIR/.python_hue file.
 b.connect()
 ~~~~
 
