@@ -5,6 +5,11 @@ Did you thought how nice it would be to control Philips Hue bulbs with IKEA Trå
 
 ![A short video with one Hue bulb, one Trådfri bulb and one Trådfri remote.](https://raw.githubusercontent.com/jtulak/huefri/master/example.gif)
 
+All operations of the remote are supported: on/off, brightness level, change of
+white light temperature.  You can manually control the Hue bulbs independently
+on the Trådfri one, but once the master Trådfri bulb changes its state, the Hue
+bulbs are set to the same temperature/brightness.
+
 ## How it works
 You press a button on an IKEA remote. The paired Trådfri bulb changes its light and within one second, all other configured Hue bulbs changes too.
 
