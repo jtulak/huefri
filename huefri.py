@@ -125,6 +125,27 @@ class Tradfri(object):
         self.state = None
         self.dimmer = None
 
+    def set(self, light: int, hex_color: str, brightness: int):
+        """ Set given light (indexed from 0) to specific color and brightness.
+
+            Parameters
+            ----------
+            light : int
+                Index of the bulb, starting from 0
+
+            hex_color : str
+                Color to set.
+
+            brightness : int
+                Brightness to set. If 0, the bulb will be turned off.
+        """
+        if brightness:
+            self._lights[light].light_control.set_hex_color(hex_color)
+            self._lights[light].light_control.set_dimmer(brightness)
+            self._lights[light].light_control.set_state(True)
+        else:
+            self._lights[light].light_control.set_state(False)
+
 
     def update(self):
         """ Check if the main light changed since the last call of this function
