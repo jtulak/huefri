@@ -40,11 +40,34 @@ def hex2hsb(color_hex: str, brightness: str) -> dict:
     color['bri'] = brightness
     return color
 
+class Hub(object):
+    """ Generic hub class """
 
-class Hue(object):
+    def __init__(self, ip: str, secret: str, main_light: int, lights: list):
+        """
+            Parameters
+            ----------
+            ip : str
+                Address of the hub. DNS will be resolved.
+
+            secret : str
+                The secret string generated when pairing with the bridge.
+
+            main_lights : int
+                The light we want to watch and copy changes from.
+
+            lights : list
+                A list of IDs of lights, which should be controlled.
+        """
+        self.ip = ip
+        self.secret = secret
+        self.lights_selected = lights
+        self.main_light = main_light
+
+class Hue(Hub):
     """ Class for Hue lights """
 
-    def __init__(self, ip: str, user: str, lights: list):
+    def __init__(self, ip: str, user: str, main_light: int, lights: list):
         """
             Parameters
             ----------
@@ -54,11 +77,13 @@ class Hue(object):
             user : str
                 The secret string generated when pairing with the Bridge.
 
+            main_lights : int
+                The light we want to watch and copy changes from.
+
             lights : list
                 A list of IDs of Hue lights, which should be controlled.
         """
-        self.ip = ip
-        self.lights_selected = lights
+        super().__init__(ip, user, main_light, lights)
         self.bridge = qhue.Bridge(ip, user)
         self.threads = []
 
@@ -68,6 +93,7 @@ class Hue(object):
         config = Config.get()
         return cls(config['hue']['addr'],
             config['hue']['secret'],
+            config['hue']['main'],
             config['hue']['controlled'])
 
     def set_hsb(self, hsb: dict):
@@ -102,10 +128,10 @@ class Hue(object):
 
 
 
-class Tradfri(object):
+class Tradfri(Hub):
     """ Class for Tradfri lights """
 
-    def __init__(self, ip: str, key: str, main_light: int, hue: Hue):
+    def __init__(self, ip: str, key: str, main_light: int, lights: list, hue: Hue):
         """
             Parameters
             ----------
@@ -118,16 +144,17 @@ class Tradfri(object):
             main_lights : int
                 The light we want to watch and copy changes from.
 
+            lights : list
+                A list of IDs of Tradfri lights, which should be controlled.
+
             hue: Hue
                 The Hue instance we are controlling with the main light.
         """
+        super().__init__(ip, key, main_light, lights)
+
         self.hue = hue
-        self.ip = ip
-        self.key = key
         self.api = pytradfri.coap_cli.api_factory(ip, key)
         self.gateway = pytradfri.gateway.Gateway(self.api)
-
-        self.main_light = main_light
 
         self.color = None
         self.state = None
@@ -146,6 +173,7 @@ class Tradfri(object):
         return cls(config['tradfri']['addr'],
                 config['tradfri']['secret'],
                 config['tradfri']['main'],
+                config['tradfri']['controlled'],
                 hue)
 
 
@@ -243,10 +271,12 @@ class Config(object):
 	"addr":"ADDR",
 	"secret": "SECRET",
 	"controlled": [LIST,OF,HUE,LIGHTS,TO,CONTROL (indexed from 1) ]
+	"main": WATCHED HUE BULB (indexed from 1)
 	},
 "tradfri":{
 	"addr": "ADDR",
 	"secret": "SECRET",
+	"controlled": [LIST,OF,TRADFRI,LIGHTS,TO,CONTROL (indexed from 0) ]
 	"main": WATCHED TRADFRI BULB (indexed from 0)
 	}
 }
