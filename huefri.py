@@ -85,7 +85,6 @@ class Hue(Hub):
         """
         super().__init__(ip, user, main_light, lights)
         self.bridge = qhue.Bridge(ip, user)
-        self.threads = []
 
     @classmethod
     def autoinit(cls):
@@ -109,7 +108,6 @@ class Hue(Hub):
         lights = self.bridge.lights
         for l in self.lights_selected:
             t = threading.Thread(target=self._set_hsb_selected, args=(lights[l], hsb))
-            self.threads.append(t)
             t.start()
 
     def _set_hsb_selected(self, light, hsb: dict):
