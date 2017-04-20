@@ -80,7 +80,7 @@ class Hub(object):
 class Hue(Hub):
     """ Class for Hue lights """
 
-    def __init__(self, ip: str, user: str, main_light: int, lights: list):
+    def __init__(self, ip: str, user: str, main_light: int, lights: list, tradfri: 'Tradfri' = None):
         """
             Parameters
             ----------
@@ -95,6 +95,9 @@ class Hue(Hub):
 
             lights : list
                 A list of IDs of Hue lights, which should be controlled.
+
+            tradfri : Tradfri
+                The Tradfri instance we are controlling with the main light.
         """
         super().__init__(ip, user, main_light, lights)
         self.bridge = qhue.Bridge(ip, user)
@@ -103,18 +106,19 @@ class Hue(Hub):
         self.bri = None
         self.sat = None
         self.state = None
-        self.tradfri = None
+        self.tradfri = tradfri
 
     @classmethod
-    def autoinit(cls):
+    def autoinit(cls, tradfri: 'Tradfri' = None):
         """ Get the constructor arguments automatically from Config class. """
         config = Config.get()
         return cls(config['hue']['addr'],
             config['hue']['secret'],
             config['hue']['main'],
-            config['hue']['controlled'])
+            config['hue']['controlled'],
+            tradfri)
 
-    def set_tradfri(self, tradfri):
+    def set_tradfri(self, tradfri: 'Tradfri'):
         self.tradfri = tradfri
 
     def set_hsb(self, hsb: dict):
@@ -198,7 +202,7 @@ class Hue(Hub):
 class Tradfri(Hub):
     """ Class for Tradfri lights """
 
-    def __init__(self, ip: str, key: str, main_light: int, lights: list, hue: Hue):
+    def __init__(self, ip: str, key: str, main_light: int, lights: list, hue: 'Hue' = None):
         """
             Parameters
             ----------
@@ -228,7 +232,7 @@ class Tradfri(Hub):
         self.dimmer = None
 
     @classmethod
-    def autoinit(cls, hue: Hue):
+    def autoinit(cls, hue: 'Hue' = None):
         """ Get the constructor arguments automatically from Config class.
             Parameters
             ----------
@@ -243,6 +247,8 @@ class Tradfri(Hub):
                 config['tradfri']['controlled'],
                 hue)
 
+    def set_hue(self, hue):
+        self.hue = hue
 
     def set_all(self, hex_color: str, brightness: int):
         """ Set all controlled lights to specific color and brightness.
@@ -284,6 +290,9 @@ class Tradfri(Hub):
         """ Check if the main light changed since the last call of this function
             and if yes, propagate the change to other lights.
         """
+        if self.hue is None:
+            raise Exception("Hue object was not passed to Tradfri.")
+
         change = False
         color = self._lights[self.main_light].light_control.lights[0].hex_color
         dimmer = self._lights[self.main_light].light_control.lights[0].dimmer
