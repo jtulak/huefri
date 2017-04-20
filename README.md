@@ -91,8 +91,8 @@ import huefri
 # Both objects needs a reference of the other one.
 # The ordr doesn't matter.
 # Config is loaded automatically from the config file when using autoinit.
-hue = Hue.autoinit()
-tradfri = Tradfri.autoinit(hue)
+hue = huefri.Hue.autoinit()
+tradfri = huefri.Tradfri.autoinit(hue)
 hue.set_tradfri(tradfri)
 
 # All lights are at your service. :-)
