@@ -28,17 +28,28 @@ import threading
 import traceback
 import json
 
+DELTA = datetime.timedelta(seconds=1)
+
+COLORS_MAP = {
+        "efd275": {'on': True, 'hue':  6188, 'sat': 249}, # warm
+        "f1e0b5": {'on': True, 'hue':  7644, 'sat': 150}, # medium
+        "f5faf6": {'on': True, 'hue': 39312, 'sat':  13}, # cold
+}
+
 def hex2hsb(color_hex: str, brightness: str) -> dict:
     """ Translate hex+brightness -> hsb """
 
-    COLORS_MAP = {
-            "efd275": {'on': True, 'hue':  6188, 'sat': 249}, # warm
-            "f1e0b5": {'on': True, 'hue':  7644, 'sat': 150}, # medium
-            "f5faf6": {'on': True, 'hue': 39312, 'sat':  13}, # cold
-    }
     color = COLORS_MAP[color_hex]
     color['bri'] = brightness
     return color
+
+def hsb2hex(hue: int, sat: int) -> str:
+    for rgb, vals in COLORS_MAP.items():
+        if hue == vals['hue'] and sat == vals['sat']:
+            return rgb
+    raise Exception("unknown color h:%d, s:%d" % (hue, sat))
+
+
 
 class Hub(object):
     """ Generic hub class """
@@ -59,6 +70,7 @@ class Hub(object):
             lights : list
                 A list of IDs of lights, which should be controlled.
         """
+        self.last_changed = datetime.datetime.now();
         self.ip = ip
         self.secret = secret
         self.lights_selected = lights
@@ -86,6 +98,12 @@ class Hue(Hub):
         super().__init__(ip, user, main_light, lights)
         self.bridge = qhue.Bridge(ip, user)
 
+        self.hue = None
+        self.bri = None
+        self.sat = None
+        self.state = None
+        self.tradfri = None
+
     @classmethod
     def autoinit(cls):
         """ Get the constructor arguments automatically from Config class. """
@@ -94,6 +112,9 @@ class Hue(Hub):
             config['hue']['secret'],
             config['hue']['main'],
             config['hue']['controlled'])
+
+    def set_tradfri(self, tradfri):
+        self.tradfri = tradfri
 
     def set_hsb(self, hsb: dict):
         """ Set all controlled Hue lights to this color.
@@ -123,6 +144,53 @@ class Hue(Hub):
                 description for further info.
         """
         light.state(**hsb)
+
+    def update(self):
+        """ Check if the main light changed since the last call of this function
+            and if yes, propagate the change to other lights.
+        """
+        if self.tradfri is None:
+            raise Exception("Tradfri object was not passed to Hue.")
+
+        main = self.bridge.lights[self.main_light]()['state']
+
+        change = False
+        hue = main['hue']
+        sat = main['sat']
+        bri = main['bri']
+        state = main['on']
+
+        if hue != self.hue:
+            change = True
+            self.hue = hue
+        if bri != self.bri:
+            change = True
+            self.bri = bri
+        if sat != self.sat:
+            change = True
+            self.sat = sat
+        if state != self.state:
+            change = True
+            self.state = state
+
+        if self.tradfri.last_changed > datetime.datetime.now() - DELTA:
+            """ If the other side changed within DELTA time, any change
+                we found is caused by the sync and not by a manual control.
+                So, skip any operation.
+            """
+            print("hue sync skipped")
+            return
+
+        if change:
+            self.last_changed = datetime.datetime.now()
+            if state:
+                rgb = hsb2hex(hue, sat)
+                print("send to tradfri: %s, %s" % (rgb, str(bri)))
+                self.tradfri.set_all(rgb, bri)
+            else:
+                rgb = hsb2hex(hue, sat)
+                print("turn off")
+                self.tradfri.set_all(rgb, 0)
 
 
 
@@ -175,7 +243,21 @@ class Tradfri(Hub):
                 hue)
 
 
-    def set(self, light: int, hex_color: str, brightness: int):
+    def set_all(self, hex_color: str, brightness: int):
+        """ Set all controlled lights to specific color and brightness.
+
+            Parameters
+            ----------
+            hex_color : str
+                Color to set.
+
+            brightness : int
+                Brightness to set. If 0, the bulb will be turned off.
+        """
+        for l in self.lights_selected:
+            self._set(l, hex_color, brightness)
+
+    def _set(self, light: int, hex_color: str, brightness: int):
         """ Set given light (indexed from 0) to specific color and brightness.
 
             Parameters
@@ -208,18 +290,24 @@ class Tradfri(Hub):
 
         if dimmer != self.dimmer:
             change = True
-            print("Dimmer changed to: %s" % dimmer)
             self.dimmer = dimmer
         if color != self.color:
             change = True
-            print("Color changed to: %s" % color)
             self.color = color
         if state != self.state:
             change = True
-            print("State changed to: %s" % state)
             self.state = state
 
+        if self.hue.last_changed > datetime.datetime.now() - DELTA:
+            """ If the other side changed within DELTA time, any change
+                we found is caused by the sync and not by a manual control.
+                So, skip any operation.
+            """
+            print("tradfri sync skipped")
+            return
+
         if change:
+            self.last_changed = datetime.datetime.now()
             if state:
                 hsb = hex2hsb(self.color, self.dimmer)
                 print("send to hue: %s" % str(hsb))
@@ -288,6 +376,7 @@ def main():
 
     hue = Hue.autoinit()
     tradfri = Tradfri.autoinit(hue)
+    hue.set_tradfri(tradfri)
 
     """
         Forever check the main light and update Hue lights.
@@ -296,6 +385,7 @@ def main():
         try:
             print(datetime.datetime.now())
             tradfri.update()
+            hue.update()
         except Exception as err:
             traceback.print_exc()
             print(err)
