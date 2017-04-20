@@ -395,6 +395,11 @@ def main():
         try:
             tradfri.update()
             hue.update()
+        except pytradfri.error.RequestTimeout:
+            """ This exception is raised here and there and doesn't cause anything.
+                So print just a short notice, not a full stacktrace.
+            """
+            log("MAIN", "Tradfri RequestTimeout().")
         except Exception as err:
             traceback.print_exc()
             log("MAIN", err)
