@@ -62,6 +62,14 @@ class Hue(object):
         self.bridge = qhue.Bridge(ip, user)
         self.threads = []
 
+    @classmethod
+    def autoinit(cls):
+        """ Get the constructor arguments automatically from Config class. """
+        config = Config.get()
+        return cls(config['hue']['addr'],
+            config['hue']['secret'],
+            config['hue']['controlled'])
+
     def set_hsb(self, hsb: dict):
         """ Set all controlled Hue lights to this color.
 
@@ -124,6 +132,22 @@ class Tradfri(object):
         self.color = None
         self.state = None
         self.dimmer = None
+
+    @classmethod
+    def autoinit(cls, hue: Hue):
+        """ Get the constructor arguments automatically from Config class.
+            Parameters
+            ----------
+            hue : Hue
+                The Hue instance we are controlling with the main light.
+        """
+
+        config = Config.get()
+        return cls(config['tradfri']['addr'],
+                config['tradfri']['secret'],
+                config['tradfri']['main'],
+                hue)
+
 
     def set(self, light: int, hex_color: str, brightness: int):
         """ Set given light (indexed from 0) to specific color and brightness.
@@ -234,18 +258,8 @@ class Config(object):
 
 def main():
 
-    """
-        Get configuration for the hubs.
-    """
-    config = Config.get()
-
-    hue = Hue(config['hue']['addr'],
-            config['hue']['secret'],
-            config['hue']['controlled'])
-    tradfri = Tradfri(config['tradfri']['addr'],
-            config['tradfri']['secret'],
-            config['tradfri']['main'],
-            hue)
+    hue = Hue.autoinit()
+    tradfri = Tradfri.autoinit(hue)
 
     """
         Forever check the main light and update Hue lights.
