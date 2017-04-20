@@ -189,23 +189,31 @@ class Tradfri(object):
     def _lights(self):
         return [dev for dev in self._devices if dev.has_light_control]
 
+class Config(object):
+
+    _config = None
+
+    def __init__(self):
+        raise Exception("Config is a singleton, do not initializate it.")
 
 
-
-def main():
-
-    """
-        Get configuration for the hubs.
-    """
-    configfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.json")
-    config = None
-    try:
-        json_data=open(configfile).read()
-        config = json.loads(json_data)
-    except:
-        print("Can't read or parse the config. Please, create this json file next to this script.\n")
-        print("FILE config.json:")
-        print("""{
+    @classmethod
+    def get(cls):
+        """
+            Return json object with config.
+        """
+        if cls._config is not None:
+            return cls._config
+        else:
+            configfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.json")
+            try:
+                json_data=open(configfile).read()
+                cls._config = json.loads(json_data)
+                return cls._config
+            except:
+                print("Can't read or parse the config. Please, create this json file next to this script.\n")
+                print("FILE config.json:")
+                print("""{
 {
 "hue":{
 	"addr":"ADDR",
@@ -220,6 +228,16 @@ def main():
 }
 """)
         sys.exit(1)
+
+
+
+
+def main():
+
+    """
+        Get configuration for the hubs.
+    """
+    config = Config.get()
 
     hue = Hue(config['hue']['addr'],
             config['hue']['secret'],
