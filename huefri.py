@@ -49,7 +49,8 @@ def hsb2hex(hue: int, sat: int) -> str:
             return rgb
     raise Exception("unknown color h:%d, s:%d" % (hue, sat))
 
-
+def log(where: str, s: str):
+    print("[%s] %s: %s" % (str(datetime.datetime.now()), where, s))
 
 class Hub(object):
     """ Generic hub class """
@@ -178,18 +179,18 @@ class Hue(Hub):
                 we found is caused by the sync and not by a manual control.
                 So, skip any operation.
             """
-            print("hue sync skipped")
+            log("Hue", "tradfri sync skipped")
             return
 
         if change:
             self.last_changed = datetime.datetime.now()
             if state:
                 rgb = hsb2hex(hue, sat)
-                print("send to tradfri: %s, %s" % (rgb, str(bri)))
+                log("Hue", "send to tradfri: %s, %s" % (rgb, str(bri)))
                 self.tradfri.set_all(rgb, bri)
             else:
                 rgb = hsb2hex(hue, sat)
-                print("turn off")
+                log("Hue", "turn off")
                 self.tradfri.set_all(rgb, 0)
 
 
@@ -303,18 +304,18 @@ class Tradfri(Hub):
                 we found is caused by the sync and not by a manual control.
                 So, skip any operation.
             """
-            print("tradfri sync skipped")
+            log("Tradfri", "hue sync skipped")
             return
 
         if change:
             self.last_changed = datetime.datetime.now()
             if state:
                 hsb = hex2hsb(self.color, self.dimmer)
-                print("send to hue: %s" % str(hsb))
+                log("Tradfri", "send to hue: %s" % str(hsb))
                 self.hue.set_hsb(hsb)
             else:
                 hsb = hex2hsb(self.color, 0)
-                print("turn off")
+                log("Tradfri", "turn off")
                 self.hue.set_hsb({'on': False})
 
 
@@ -349,7 +350,7 @@ class Config(object):
                 cls._config = json.loads(json_data)
                 return cls._config
             except:
-                print("Can't read or parse the config. Please, create this json file next to this script.\n")
+                log("Config", "Can't read or parse the config. Please, create this json file next to this script.\n")
                 print("FILE config.json:")
                 print("""{
 {
@@ -383,12 +384,11 @@ def main():
     """
     while True:
         try:
-            print(datetime.datetime.now())
             tradfri.update()
             hue.update()
         except Exception as err:
             traceback.print_exc()
-            print(err)
+            log("MAIN", err)
         time.sleep(1)
 
 if __name__ == '__main__':
