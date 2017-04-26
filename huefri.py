@@ -28,7 +28,7 @@ import threading
 import traceback
 import json
 
-DELTA = datetime.timedelta(seconds=1)
+DELTA = datetime.timedelta(seconds=5)
 
 COLORS_MAP = {
         "efd275": {'on': True, 'hue':  6188, 'sat': 249}, # warm
