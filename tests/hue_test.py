@@ -20,10 +20,13 @@
 import unittest
 from unittest import mock as mock
 import json
+import datetime
+
 import dummy
 import huefri
 import huefri.common
 from huefri.hue import Hue
+from huefri.common import DELTA as DELTA
 
 
 
@@ -32,6 +35,7 @@ class TestHue(unittest.TestCase):
     def setUp(self):
         self.fnt_log = huefri.common.log
         huefri.common.log = lambda x,y: None
+        huefri.hue.log = lambda x,y: None
         huefri.common.Config._config = json.loads("""{
             "hue":{
                 "addr":"hue",
@@ -46,10 +50,21 @@ class TestHue(unittest.TestCase):
                 "main": 0
                 }
             }""")
+        self.map = [
+            {"hex": "efd275", # warm - 34,98 in OpenHab
+                "hsb": {'on': True, 'hue':  6188, 'sat': 249}},
+            {"hex": "f1e0b5", # medium - 42,59 in OpenHab
+                "hsb": {'on': True, 'hue':  7644, 'sat': 150}},
+            {"hex": "f5faf6", # cold - 216,5 in OpenHab
+                "hsb": {'on': True, 'hue': 39312, 'sat':  13}},
+        ]
+        self.cls_map = huefri.common.COLORS_MAP
+        huefri.common.COLORS_MAP = self.map
         with mock.patch('qhue.Bridge', dummy.Bridge) as m:
             self.hue = Hue.autoinit()
 
     def tearDown(self):
+        huefri.common.COLORS_MAP = self.cls_map
         huefri.common.log = self.fnt_log
 
     def test_init(self):
@@ -78,5 +93,45 @@ class TestHue(unittest.TestCase):
         self.assertEqual(self.hue.bridge.lights[4].hsb, None)
         self.assertEqual(self.hue.bridge.lights[0].hsb, None)
 
+    def test_changed(self):
+        # exception if we don't know about tradfri
+        self.hue.tradfri = None
+        with self.assertRaises(Exception):
+            self.hue.changed()
 
+        # set up
+        self.hue.set_hsb({'hue':  7644, 'sat': 150, 'bri': 100})
+        self.hue.tradfri = dummy.DummyHub()
+
+        # save current state
+        self.hue.tradfri.set_time_to_now()
+        self.assertFalse(self.hue.changed())
+        # move time, test if it remembers state
+        self.hue.tradfri.set_time_to_past()
+        self.assertFalse(self.hue.changed())
+
+        # change state
+        self.hue.set_hsb({'hue':  100, 'sat': 100, 'bri': 100})
+        self.assertTrue(self.hue.changed())
+        # move time, test if it remembers state
+        self.hue.tradfri.set_time_to_past()
+        self.assertFalse(self.hue.changed())
+
+
+    def test_update(self):
+        self.hue.tradfri = dummy.DummyHub()
+
+        # the colors of tradfri should change
+        with mock.patch('huefri.hue.Hue.changed', lambda x: True) as m:
+            self.hue.set_hsb({'hue':  7644, 'sat': 150, 'bri': 100})
+            self.hue.update()
+            self.assertEqual("f1e0b5", self.hue.tradfri.rgb)
+            self.assertEqual(100, self.hue.tradfri.bri)
+
+        # the colors of tradfri should stay same as in the previous case
+        with mock.patch('huefri.hue.Hue.changed', lambda x: False) as m:
+            self.hue.set_hsb({'hue': 39312, 'sat':  13, 'bri': 150})
+            self.hue.update()
+            self.assertEqual("f1e0b5", self.hue.tradfri.rgb)
+            self.assertEqual(100, self.hue.tradfri.bri)
 

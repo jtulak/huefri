@@ -32,6 +32,7 @@ class TestTradfri(unittest.TestCase):
     def setUp(self):
         self.fnt_log = huefri.common.log
         huefri.common.log = lambda x,y: None
+        huefri.tradfri.log = lambda x,y: None
         huefri.common.Config._config = json.loads("""{
             "hue":{
                 "addr":"hue",
@@ -46,12 +47,23 @@ class TestTradfri(unittest.TestCase):
                 "main": 0
                 }
             }""")
+        self.map = [
+            {"hex": "efd275", # warm - 34,98 in OpenHab
+                "hsb": {'on': True, 'hue':  6188, 'sat': 249}},
+            {"hex": "f1e0b5", # medium - 42,59 in OpenHab
+                "hsb": {'on': True, 'hue':  7644, 'sat': 150}},
+            {"hex": "f5faf6", # cold - 216,5 in OpenHab
+                "hsb": {'on': True, 'hue': 39312, 'sat':  13}},
+        ]
+        self.cls_map = huefri.common.COLORS_MAP
+        huefri.common.COLORS_MAP = self.map
         with mock.patch('pytradfri.coap_cli.api_factory', dummy.TAPI) as m:
             with mock.patch('pytradfri.gateway.Gateway', dummy.Gateway) as n:
                 self.tradfri = Tradfri.autoinit()
 
     def tearDown(self):
         huefri.common.log = self.fnt_log
+        huefri.common.COLORS_MAP = self.cls_map
 
     def test_init(self):
         with mock.patch('pytradfri.coap_cli.api_factory', dummy.TAPI) as m:
@@ -83,4 +95,44 @@ class TestTradfri(unittest.TestCase):
 
         self.assertEqual(150, self.tradfri.gateway.lights[0].dimmer)
         self.assertTrue(self.tradfri.gateway.lights[2].state)
+
+    def test_changed(self):
+        # exception if we don't know about hue
+        self.tradfri.hue = None
+        with self.assertRaises(Exception):
+            self.tradfri.changed()
+
+        # set up
+        self.tradfri.set_all("bababa", 150)
+        self.tradfri.hue = dummy.DummyHub()
+
+        # save current state
+        self.tradfri.hue.set_time_to_now()
+        self.assertFalse(self.tradfri.changed())
+        # move time, test if it remembers state
+        self.tradfri.hue.set_time_to_past()
+        self.assertFalse(self.tradfri.changed())
+
+        # change state
+        self.tradfri.set_all("caffee", 100)
+        self.assertTrue(self.tradfri.changed())
+        # move time, test if it remembers state
+        self.tradfri.hue.set_time_to_past()
+        self.assertFalse(self.tradfri.changed())
+
+
+    def test_update(self):
+        self.tradfri.hue = dummy.DummyHub()
+
+        # the colors of tradfri should change
+        with mock.patch('huefri.tradfri.Tradfri.changed', lambda x: True) as m:
+            self.tradfri.set_all("efd275", 100)
+            self.tradfri.update()
+            self.assertEqual({'on': True, 'hue':  6188, 'sat': 249, 'bri': 100}, self.tradfri.hue.hsb)
+
+        # the colors of tradfri should stay same as in the previous case
+        with mock.patch('huefri.tradfri.Tradfri.changed', lambda x: False) as m:
+            self.tradfri.set_all("f5faf6", 150)
+            self.tradfri.update()
+            self.assertEqual({'on': True, 'hue':  6188, 'sat': 249, 'bri': 100}, self.tradfri.hue.hsb)
 

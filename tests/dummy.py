@@ -18,6 +18,36 @@
 #
 
 
+import datetime
+from huefri.common import DELTA as DELTA
+
+class DummyHub(object):
+    """ mock of Hue and Tradfri classes """
+    def __init__(self):
+        self.set_time_to_now()
+        self.rgb = None
+        self.bri = None
+        self.hsb = None
+
+    def set_time_to_now(self):
+        """ test method to manipulate with last_changed time """
+        self.last_changed = datetime.datetime.now()
+
+    def set_time_to_past(self):
+        """ test method to manipulate with last_changed time """
+        self.last_changed = datetime.datetime.now() - 2*DELTA
+
+
+    def set_all(self, rgb, bri):
+        """ Tradfri method """
+        self.rgb = rgb
+        self.bri = bri
+
+    def set_hsb(self, hsb):
+        """ Hue method """
+        self.hsb = hsb
+
+
 # Hue section
 class HLight(object):
     def __init__(self):
@@ -26,12 +56,18 @@ class HLight(object):
     def state(self, hue, sat, bri):
         self.hsb = {'hue': hue, 'sat': sat, 'bri': bri}
 
+    def __call__(self):
+        if self.hsb is None:
+            return {'state': {'hue': 0, 'sat': 0, 'bri': 0, 'on': False}}
+        x = self.hsb.copy()
+        x['on'] = True if x['bri'] else False
+        return {'state': x}
+
 class Bridge(object):
     def __init__(self, ip, secret):
         self.ip = ip
         self.secret = secret
         self.lights = [HLight() for x in range(0,10)]
-
 
 # Tradfri section
 class TLight(object):
@@ -40,6 +76,11 @@ class TLight(object):
         self.dimmer = None
         self.state = None
         self.has_light_control = True
+        self.lights = [self]
+
+    @property
+    def hex_color(self):
+        return self.color
 
     @property
     def light_control(self):
@@ -66,3 +107,4 @@ class Gateway(object):
 
     def get_devices(self):
         return self.lights
+
