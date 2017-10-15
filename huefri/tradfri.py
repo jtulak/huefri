@@ -151,13 +151,15 @@ class Tradfri(Hub):
             and if yes, propagate the change to other lights.
         """
         if self.changed():
+            main = self._lights[self.main_light].light_control.lights[0]
+
             self.last_changed = datetime.datetime.now()
-            if self._lights[self.main_light].light_control.lights[0].state:
-                hsb = hex2hsb(self.color, self.dimmer)
+            if main.state:
+                hsb = hex2hsb(main.hex_color, main.dimmer)
                 log("Tradfri", "send to hue: %s" % str(hsb))
                 self.hue.set_hsb(hsb)
             else:
-                hsb = hex2hsb(self.color, 0)
+                hsb = hex2hsb(main.hex_color, 0)
                 log("Tradfri", "turn off")
                 self.hue.set_hsb({'on': False})
 
