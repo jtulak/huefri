@@ -86,18 +86,19 @@ b.connect()
 ## Use as a library
 You can use this project as library too:
 ~~~~
-import huefri
+from huefri.hue import Hue
+from huefri.tradfri import Tradfri
 
 # Both objects needs a reference of the other one.
 # The ordr doesn't matter.
 # Config is loaded automatically from the config file when using autoinit.
-hue = huefri.Hue.autoinit()
-tradfri = huefri.Tradfri.autoinit(hue)
+hue = Hue.autoinit()
+tradfri = Tradfri.autoinit(hue)
 hue.set_tradfri(tradfri)
 
 # All lights are at your service. :-)
 ~~~~
 
-## Changelog
-* Synchronisation now works both ways
-* Changed output format
+## Development
+If you want to submit a pull request, please, test your changes:
+`python3 unittests.py`, or/and add relevant new tests.
