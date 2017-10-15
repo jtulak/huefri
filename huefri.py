@@ -28,6 +28,7 @@ import threading
 import traceback
 import json
 
+import huefri
 from huefri.common import Config as Config
 from huefri.common import log as log
 from huefri.hue import Hue as Hue
@@ -35,9 +36,13 @@ from huefri.tradfri import Tradfri as Tradfri
 
 def main():
 
-    hue = Hue.autoinit()
-    tradfri = Tradfri.autoinit(hue)
-    hue.set_tradfri(tradfri)
+    try:
+        hue = Hue.autoinit()
+        tradfri = Tradfri.autoinit(hue)
+        hue.set_tradfri(tradfri)
+    except:
+        # message is already printed
+        sys.exit(1)
 
     """
         Forever check the main light and update Hue lights.

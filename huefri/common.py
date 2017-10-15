@@ -91,6 +91,9 @@ class Hub(object):
         self.lights_selected = lights
         self.main_light = main_light
 
+class BadConfigPathError(IOError):
+    pass
+
 class Config(object):
 
     _config = None
@@ -103,14 +106,21 @@ class Config(object):
         """
             Populate the config object from a json file.
         """
+        error = None
         try:
-            json_data=open(configfile).read()
-            cls._config = json.loads(json_data)
-            return cls._config
-        except:
-            log("Config", "Can't read or parse the config. Please, create this json file next to this script.\n")
-            print("FILE config.json:")
-            print("""{
+            with open(configfile, 'r') as h:
+                json_data = h.read()
+                cls._config = json.loads(json_data)
+                return cls._config
+        except IOError:
+            error = BadConfigPathError
+            log("Config", "Can't open the config. Please, create this json file next to this script.\n")
+        except json.JSONDecodeError as ex:
+            error = ex
+            log("Config", "Can't parse the config. The file should have this syntax:\n")
+
+        print("FILE config.json:")
+        print("""{
 "hue":{
 	"addr":"ADDR",
 	"secret": "SECRET",
@@ -125,7 +135,7 @@ class Config(object):
 	}
 }
 """)
-            sys.exit(1)
+        raise error
 
     @classmethod
     def get(cls):
