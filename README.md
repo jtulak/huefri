@@ -83,6 +83,9 @@ b = Bridge('ip_of_your_bridge')
 b.connect()
 ~~~~
 
+For Tradfri secret code (16 characters long string), peek at the back of your
+Tradfri Gateway.
+
 ## Use as a library
 You can use this project as library too:
 ~~~~
