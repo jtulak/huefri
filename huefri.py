@@ -411,19 +411,23 @@ def main():
     """
         Forever check the main light and update Hue lights.
     """
-    while True:
-        try:
-            tradfri.update()
-            hue.update()
-        except pytradfri.error.RequestTimeout:
-            """ This exception is raised here and there and doesn't cause anything.
-                So print just a short notice, not a full stacktrace.
-            """
-            log("MAIN", "Tradfri RequestTimeout().")
-        except Exception as err:
-            traceback.print_exc()
-            log("MAIN", err)
-        time.sleep(1)
+    try:
+        while True:
+            try:
+                tradfri.update()
+                hue.update()
+            except pytradfri.error.RequestTimeout:
+                """ This exception is raised here and there and doesn't cause anything.
+                    So print just a short notice, not a full stacktrace.
+                """
+                log("MAIN", "Tradfri RequestTimeout().")
+            except Exception as err:
+                traceback.print_exc()
+                log("MAIN", err)
+            time.sleep(1)
+    except KeyboardInterrupt:
+        log("MAIN", "Exiting on ^c.")
+        sys.exit(0)
 
 if __name__ == '__main__':
     main()
