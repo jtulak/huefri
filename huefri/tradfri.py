@@ -116,10 +116,8 @@ class Tradfri(Hub):
             self._lights[light].light_control.set_state(False)
 
 
-    def update(self):
-        """ Check if the main light changed since the last call of this function
-            and if yes, propagate the change to other lights.
-        """
+    def changed(self):
+        """ Test whether there is any change since the last call. """
         if self.hue is None:
             raise Exception("Hue object was not passed to Tradfri.")
 
@@ -140,15 +138,21 @@ class Tradfri(Hub):
 
         if self.hue.last_changed > datetime.datetime.now() - DELTA:
             """ If the other side changed within DELTA time, any change
-                we found is caused by the sync and not by a manual control.
-                So, skip any operation.
+                we found is likely caused by the sync and not by a manual
+                control.  So, skip any operation.
             """
             log("Tradfri", "hue sync skipped")
-            return
+            change = False
 
-        if change:
+        return change
+
+    def update(self):
+        """ Check if the main light changed since the last call of this function
+            and if yes, propagate the change to other lights.
+        """
+        if self.changed():
             self.last_changed = datetime.datetime.now()
-            if state:
+            if self._lights[self.main_light].light_control.lights[0].state:
                 hsb = hex2hsb(self.color, self.dimmer)
                 log("Tradfri", "send to hue: %s" % str(hsb))
                 self.hue.set_hsb(hsb)

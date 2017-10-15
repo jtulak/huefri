@@ -102,10 +102,8 @@ class Hue(Hub):
         """
         light.state(**hsb)
 
-    def update(self):
-        """ Check if the main light changed since the last call of this function
-            and if yes, propagate the change to other lights.
-        """
+    def changed(self):
+        """ Test whether there is any change since the last call. """
         if self.tradfri is None:
             raise Exception("Tradfri object was not passed to Hue.")
 
@@ -132,13 +130,26 @@ class Hue(Hub):
 
         if self.tradfri.last_changed > datetime.datetime.now() - DELTA:
             """ If the other side changed within DELTA time, any change
-                we found is caused by the sync and not by a manual control.
-                So, skip any operation.
+                we found is likely caused by the sync and not by a manual
+                control.  So, skip any operation.
             """
             log("Hue", "tradfri sync skipped")
-            return
+            change = False
 
-        if change:
+        return change
+
+    def update(self):
+        """ Check if the main light changed since the last call of this function
+            and if yes, propagate the change to other lights.
+        """
+
+        if self.changed():
+            main = self.bridge.lights[self.main_light]()['state']
+            hue = main['hue']
+            sat = main['sat']
+            bri = main['bri']
+            state = main['on']
+
             self.last_changed = datetime.datetime.now()
             if state:
                 rgb = hsb2hex(hue, sat)
