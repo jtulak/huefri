@@ -114,13 +114,13 @@ class Config(object):
                 return cls._config
         except IOError:
             error = BadConfigPathError
-            log("Config", "Can't open the config. Please, create this json file next to this script.\n")
+            log("Config", "Can't open the config. Please, create a json file next to this script.\n")
         except json.JSONDecodeError as ex:
             error = ex
-            log("Config", "Can't parse the config. The file should have this syntax:\n")
+            log("Config", "Can't parse the config.\n")
 
-        print("FILE config.json:")
-        print("""{
+        log("Config", """File config.json should contain:
+{
 "hue":{
 	"addr":"ADDR",
 	"secret": "SECRET",
