@@ -21,6 +21,7 @@ import qhue
 import datetime
 import threading
 from huefri.common import Hub as Hub
+from huefri.common import HuefriException as HuefriException
 from huefri.common import Config as Config
 from huefri.common import DELTA as DELTA
 from huefri.common import log as log
@@ -105,7 +106,7 @@ class Hue(Hub):
     def changed(self):
         """ Test whether there is any change since the last call. """
         if self.tradfri is None:
-            raise Exception("Tradfri object was not passed to Hue.")
+            raise HuefriException("Tradfri object was not passed to Hue.")
 
         main = self.bridge.lights[self.main_light]()['state']
 

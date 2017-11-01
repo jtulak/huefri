@@ -23,6 +23,7 @@ import datetime
 import os
 
 from huefri.common import Hub as Hub
+from huefri.common import HuefriException as HuefriException
 from huefri.common import Config as Config
 from huefri.common import DELTA as DELTA
 from huefri.common import log as log
@@ -119,7 +120,7 @@ class Tradfri(Hub):
     def changed(self):
         """ Test whether there is any change since the last call. """
         if self.hue is None:
-            raise Exception("Hue object was not passed to Tradfri.")
+            raise HuefriException("Hue object was not passed to Tradfri.")
 
         change = False
         color = self._lights[self.main_light].light_control.lights[0].hex_color

@@ -30,6 +30,7 @@ import json
 
 import huefri
 from huefri.common import Config as Config
+from huefri.common import HuefriException as HuefriException
 from huefri.common import log as log
 from huefri.hue import Hue as Hue
 from huefri.tradfri import Tradfri as Tradfri
@@ -40,8 +41,11 @@ def main():
         hue = Hue.autoinit()
         tradfri = Tradfri.autoinit(hue)
         hue.set_tradfri(tradfri)
-    except:
+    except HuefriException:
         # message is already printed
+        sys.exit(1)
+    except pytradfri.error.ClientError as e:
+        print("An error occured when initializing Tradfri: %s" % str(e))
         sys.exit(1)
 
     """

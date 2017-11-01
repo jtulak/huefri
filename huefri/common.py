@@ -66,6 +66,9 @@ def hsb2hex(hue: int, sat: int) -> str:
 def log(where: str, s: str):
     print("[%s] %s: %s" % (str(datetime.datetime.now()), where, s))
 
+class HuefriException(Exception):
+    pass
+
 class Hub(object):
     """ Generic hub class """
 
