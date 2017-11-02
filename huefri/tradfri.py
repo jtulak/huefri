@@ -17,10 +17,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import pytradfri
 import time
 import datetime
 import os
+import threading
+
+from pytradfri import Gateway
+from pytradfri.api.libcoap_api import APIFactory
 
 from huefri.common import Hub as Hub
 from huefri.common import HuefriException as HuefriException
@@ -55,8 +58,15 @@ class Tradfri(Hub):
         super().__init__(ip, key, main_light, lights)
 
         self.hue = hue
-        self.api = pytradfri.coap_cli.api_factory(ip, key)
-        self.gateway = pytradfri.gateway.Gateway(self.api)
+
+        api_factory = APIFactory(ip)
+        api_factory.psk = key
+        self.api = api_factory.request
+        self.gateway = Gateway()
+
+        devices_command = self.gateway.get_devices()
+        devices_commands = self.api(devices_command)
+        self._devices = self.api(devices_commands)
 
         self.color = None
         self.state = None
@@ -116,11 +126,25 @@ class Tradfri(Hub):
         else:
             self._lights[light].light_control.set_state(False)
 
+    def observe(self, device):
+        """ A dirty hack to get the new API working """
+        def callback(updated_device):
+            light = updated_device.light_control.lights[0]
+
+        def err_callback(err):
+            print(err)
+
+        def worker():
+            self.api(device.observe(callback, err_callback, duration=0.5))
+
+        threading.Thread(target=worker, daemon=True).start()
 
     def changed(self):
         """ Test whether there is any change since the last call. """
         if self.hue is None:
             raise HuefriException("Hue object was not passed to Tradfri.")
+
+        self.observe(self._lights[self.main_light])
 
         change = False
         color = self._lights[self.main_light].light_control.lights[0].hex_color
@@ -163,12 +187,6 @@ class Tradfri(Hub):
                 hsb = hex2hsb(main.hex_color, 0)
                 log("Tradfri", "turn off")
                 self.hue.set_hsb({'on': False})
-
-
-    @property
-    def _devices(self):
-        return self.gateway.get_devices()
-
 
     @property
     def _lights(self):

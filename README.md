@@ -43,8 +43,8 @@ Note: I have only Color Ambiance Hue bulbs. If White Ambiance bulbs won't work o
 
 ## Dependencies
   * Python 3
-  * [qhue](https://github.com/quentinsf/qhue)
-  * [pytradfri](https://github.com/ggravlingen/pytradfri)
+  * [qhue](https://github.com/quentinsf/qhue) version 1.x
+  * [pytradfri](https://github.com/ggravlingen/pytradfri) version 4.x
 
 ## Instalation
 1. Get all HW working on its own.
@@ -83,8 +83,9 @@ b = Bridge('ip_of_your_bridge')
 b.connect()
 ~~~~
 
-For Tradfri secret code (16 characters long string), peek at the back of your
-Tradfri Gateway.
+For Tradfri secret code (16 characters long string), look at
+[pytradfri](https://github.com/ggravlingen/pytradfri) readme. (This is a
+temporary hotfix after IKEA and pytradfri changed API. Proper changes coming.)
 
 ## Use as a library
 You can use this project as library too:
