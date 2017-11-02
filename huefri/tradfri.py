@@ -58,6 +58,7 @@ class Tradfri(Hub):
         super().__init__(ip, key, main_light, lights)
 
         self.hue = hue
+        self.threads = []
 
         api_factory = APIFactory(ip)
         api_factory.psk = key
@@ -128,16 +129,8 @@ class Tradfri(Hub):
 
     def observe(self, device):
         """ A dirty hack to get the new API working """
-        def callback(updated_device):
-            light = updated_device.light_control.lights[0]
+        self.api(device.update())
 
-        def err_callback(err):
-            print(err)
-
-        def worker():
-            self.api(device.observe(callback, err_callback, duration=0.5))
-
-        threading.Thread(target=worker, daemon=True).start()
 
     def changed(self):
         """ Test whether there is any change since the last call. """
