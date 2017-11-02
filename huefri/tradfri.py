@@ -120,11 +120,11 @@ class Tradfri(Hub):
                 Brightness to set. If 0, the bulb will be turned off.
         """
         if brightness:
-            self._lights[light].light_control.set_hex_color(hex_color)
-            self._lights[light].light_control.set_dimmer(brightness)
-            self._lights[light].light_control.set_state(True)
+            self.api(self._lights[light].light_control.set_hex_color(hex_color))
+            self.api(self._lights[light].light_control.set_dimmer(brightness))
+            self.api(self._lights[light].light_control.set_state(True))
         else:
-            self._lights[light].light_control.set_state(False)
+            self.api(self._lights[light].light_control.set_state(False))
 
     def observe(self, device):
         """ A dirty hack to get the new API working """
