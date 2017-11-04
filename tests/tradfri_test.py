@@ -57,17 +57,18 @@ class TestTradfri(unittest.TestCase):
         ]
         self.cls_map = huefri.common.COLORS_MAP
         huefri.common.COLORS_MAP = self.map
-        with mock.patch('pytradfri.coap_cli.api_factory', dummy.TAPI) as m:
-            with mock.patch('pytradfri.gateway.Gateway', dummy.Gateway) as n:
+        with mock.patch('huefri.tradfri.APIFactory', dummy.TAPIFactory) as m:
+            with mock.patch('huefri.tradfri.Gateway', dummy.Gateway) as n:
                 self.tradfri = Tradfri.autoinit()
+                self.tradfri.gateway.api = self.tradfri.api
 
     def tearDown(self):
         huefri.common.log = self.fnt_log
         huefri.common.COLORS_MAP = self.cls_map
 
     def test_init(self):
-        with mock.patch('pytradfri.coap_cli.api_factory', dummy.TAPI) as m:
-            with mock.patch('pytradfri.gateway.Gateway', dummy.Gateway) as n:
+        with mock.patch('huefri.tradfri.APIFactory', dummy.TAPIFactory) as m:
+            with mock.patch('huefri.tradfri.Gateway', dummy.Gateway) as n:
                 tradfri = Tradfri.autoinit()
         self.assertEqual('tradfri', tradfri.api.ip)
         self.assertIsNone(tradfri.color)

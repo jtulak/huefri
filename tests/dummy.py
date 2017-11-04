@@ -88,23 +88,44 @@ class TLight(object):
 
     def set_state(self, state):
         self.state = state
+        return self
 
     def set_hex_color(self, color):
         self.color = color
+        return self
 
     def set_dimmer(self, dimmer):
         self.dimmer = dimmer
+        return self
+
+    def update(self):
+        return self
 
 class TAPI(object):
     def __init__(self, ip, secret):
         self.ip = ip
         self.secret = secret
-
-class Gateway(object):
-    def __init__(self, api):
-        self.api = api
+        self.request = self
         self.lights = [TLight() for x in range(0,10)]
 
-    def get_devices(self):
+    def __call__(self, arg):
         return self.lights
+
+def TAPIFactory(ip):
+    return TAPI(ip, "foo")
+
+class Gateway(object):
+    def __init__(self, api = None):
+        self.api = api
+        self._lights = [TLight() for x in range(0,10)]
+        self.api = None
+
+    def get_devices(self):
+        return "devices_command"
+
+    @property
+    def lights(self):
+        if self.api is None:
+            return self._lights
+        return self.api.lights
 
