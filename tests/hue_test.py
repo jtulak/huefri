@@ -88,6 +88,7 @@ class TestHue(unittest.TestCase):
                 {'hue':  7644, 'sat': 150, 'bri': 100})
         self.assertDictEqual(self.hue.bridge.lights[3].hsb,
                 {'hue':  7644, 'sat': 150, 'bri': 100})
+        self.assertEqual(1, self.hue.current_color_index)
 
         # and verify that it didn't try to set up zero index or any other light
         self.assertEqual(self.hue.bridge.lights[4].hsb, None)
@@ -111,7 +112,7 @@ class TestHue(unittest.TestCase):
         self.assertFalse(self.hue.changed())
 
         # change state
-        self.hue.set_hsb({'hue':  100, 'sat': 100, 'bri': 100})
+        self.hue.set_hsb({'hue':  39312, 'sat': 13, 'bri': 100})
         self.assertTrue(self.hue.changed())
         # move time, test if it remembers state
         self.hue.tradfri.set_time_to_past()

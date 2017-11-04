@@ -25,14 +25,6 @@ import sys
 DELTA = datetime.timedelta(seconds=5)
 
 COLORS_MAP = [
-        # this is for OpenHab colors
-        {"hex": "efd275", # warm - 34,98 in OpenHab
-            "hsb": {'on': True, 'hue':  6188, 'sat': 249}},
-        {"hex": "f1e0b5", # medium - 42,59 in OpenHab
-            "hsb": {'on': True, 'hue':  7644, 'sat': 150}},
-        {"hex": "f5faf6", # cold - 216,5 in OpenHab
-            "hsb": {'on': True, 'hue': 39312, 'sat':  13}},
-
         # This is for colors from official Hue app
         {"hex": "efd275", # warm - Nightlight
             "hsb": {'on': True, 'hue':  6291, 'sat': 251}},
@@ -42,26 +34,26 @@ COLORS_MAP = [
             "hsb": {'on': True, 'hue': 39392, 'sat':  13}},
 ]
 
+def hex2index(color_hex: str) -> int:
+    for i,c in enumerate(COLORS_MAP):
+        if c["hex"] == color_hex:
+            return i
+    raise UnknownColorException("unknown color hex:%s" % color_hex)
+
+def hsb2index(hue: int, sat: int) -> str:
+    for i, vals in enumerate(COLORS_MAP):
+        if hue == vals['hsb']['hue'] and sat == vals['hsb']['sat']:
+            return i
+    raise UnknownColorException("unknown color h:%d, s:%d" % (hue, sat))
+
 def hex2hsb(color_hex: str, brightness: str) -> dict:
     """ Translate hex+brightness -> hsb """
-
-    color = None
-    for c in COLORS_MAP:
-        if c["hex"] == color_hex:
-            color = c["hsb"]
-
-    # nothing found = raise an exception
-    if color is None:
-        raise Exception("unknown color hex:%s" % color_hex)
-
+    color = COLORS_MAP[hex2index(color_hex)]['hsb']
     color['bri'] = brightness
     return color
 
 def hsb2hex(hue: int, sat: int) -> str:
-    for vals in COLORS_MAP:
-        if hue == vals['hsb']['hue'] and sat == vals['hsb']['sat']:
-            return vals['hex']
-    raise Exception("unknown color h:%d, s:%d" % (hue, sat))
+    return COLORS_MAP[hsb2index(hue, sat)]['hex']
 
 def log(where: str, s: str):
     print("[%s] %s: %s" % (str(datetime.datetime.now()), where, s))
@@ -69,8 +61,12 @@ def log(where: str, s: str):
 class HuefriException(Exception):
     pass
 
+class UnknownColorException(HuefriException):
+    pass
+
 class Hub(object):
     """ Generic hub class """
+    brightness_steps = 8
 
     def __init__(self, ip: str, secret: str, main_light: int, lights: list):
         """
@@ -88,11 +84,34 @@ class Hub(object):
             lights : list
                 A list of IDs of lights, which should be controlled.
         """
-        self.last_changed = datetime.datetime.now();
+        self.changed_now()
         self.ip = ip
         self.secret = secret
         self.lights_selected = lights
         self.main_light = main_light
+
+    def changed_now(self):
+        self.last_changed = datetime.datetime.now()
+
+    def color_next(self):
+        raise NotImplementedError
+
+    def color_prev(self):
+        raise NotImplementedError
+
+    def brightness_inc(self):
+        raise NotImplementedError
+
+    def brightness_dec(self):
+        raise NotImplementedError
+
+    def set_color(self, color):
+        """ Set all lights to color, color a dict from COLORS_MAP """
+        raise NotImplementedError
+
+    def set_brightness(self, brightness):
+        """ Set all lights to the brightness, in range 0-100 """
+        raise NotImplementedError
 
 class BadConfigPathError(IOError):
     pass

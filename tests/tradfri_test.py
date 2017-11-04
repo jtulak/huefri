@@ -88,11 +88,12 @@ class TestTradfri(unittest.TestCase):
         self.assertIsNone(self.tradfri.gateway.lights[1].color)
 
     def test_set_all(self):
-        self.tradfri.set_all("bababa", 150)
-        self.assertEqual("bababa", self.tradfri.gateway.lights[0].color)
-        self.assertEqual("bababa", self.tradfri.gateway.lights[1].color)
-        self.assertEqual("bababa", self.tradfri.gateway.lights[2].color)
+        self.tradfri.set_all("efd275", 150)
+        self.assertEqual("efd275", self.tradfri.gateway.lights[0].color)
+        self.assertEqual("efd275", self.tradfri.gateway.lights[1].color)
+        self.assertEqual("efd275", self.tradfri.gateway.lights[2].color)
         self.assertIsNone(self.tradfri.gateway.lights[3].color)
+        self.assertEqual(0, self.tradfri.current_color_index)
 
         self.assertEqual(150, self.tradfri.gateway.lights[0].dimmer)
         self.assertTrue(self.tradfri.gateway.lights[2].state)
@@ -104,7 +105,7 @@ class TestTradfri(unittest.TestCase):
             self.tradfri.changed()
 
         # set up
-        self.tradfri.set_all("bababa", 150)
+        self.tradfri.set_all("f1e0b5", 150)
         self.tradfri.hue = dummy.DummyHub()
 
         # save current state
@@ -115,7 +116,7 @@ class TestTradfri(unittest.TestCase):
         self.assertFalse(self.tradfri.changed())
 
         # change state
-        self.tradfri.set_all("caffee", 100)
+        self.tradfri.set_all("f5faf6", 100)
         self.assertTrue(self.tradfri.changed())
         # move time, test if it remembers state
         self.tradfri.hue.set_time_to_past()

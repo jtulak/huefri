@@ -26,6 +26,9 @@ from huefri.common import Config as Config
 from huefri.common import DELTA as DELTA
 from huefri.common import log as log
 from huefri.common import hsb2hex as hsb2hex
+from huefri.common import hsb2index
+from huefri.common import COLORS_MAP
+from huefri.common import UnknownColorException
 
 
 
@@ -55,6 +58,7 @@ class Hue(Hub):
         super().__init__(ip, user, main_light, lights)
         self.bridge = qhue.Bridge(ip, user)
 
+        self.current_color_index = 0
         self.hue = None
         self.bri = None
         self.sat = None
@@ -84,6 +88,7 @@ class Hue(Hub):
                 The most important fields are: on, hue, sat, bri. See Qhue project
                 description for further info.
         """
+        self.current_color_index = hsb2index(hsb['hue'], hsb['sat'])
         lights = self.bridge.lights
         for l in self.lights_selected:
             t = threading.Thread(target=self._set_hsb_selected, args=(lights[l], hsb))
@@ -101,6 +106,9 @@ class Hue(Hub):
                 The most important fields are: on, hue, sat, bri. See Qhue project
                 description for further info.
         """
+        if 'on' in hsb and hsb['on'] == False:
+            # we should not send any other value if the bulb is to be turned off
+            hsb = {'on': False}
         light.state(**hsb)
 
     def changed(self):
@@ -129,6 +137,8 @@ class Hue(Hub):
             change = True
             self.state = state
 
+        self.current_color_index = hsb2index(hue, sat)
+
         if self.tradfri.last_changed > datetime.datetime.now() - DELTA:
             """ If the other side changed within DELTA time, any change
                 we found is likely caused by the sync and not by a manual
@@ -143,22 +153,75 @@ class Hue(Hub):
         """ Check if the main light changed since the last call of this function
             and if yes, propagate the change to other lights.
         """
+        try:
+            if self.changed():
+                main = self.bridge.lights[self.main_light]()['state']
+                hue = main['hue']
+                sat = main['sat']
+                bri = main['bri']
+                state = main['on']
 
-        if self.changed():
-            main = self.bridge.lights[self.main_light]()['state']
-            hue = main['hue']
-            sat = main['sat']
-            bri = main['bri']
-            state = main['on']
+                self.last_changed = datetime.datetime.now()
+                if state:
+                    rgb = hsb2hex(hue, sat)
+                    log("Hue", "send to tradfri: %s, %s" % (rgb, str(bri)))
+                    self.tradfri.set_all(rgb, bri)
+                else:
+                    rgb = hsb2hex(hue, sat)
+                    log("Hue", "turn off")
+                    self.tradfri.set_all(rgb, 0)
 
-            self.last_changed = datetime.datetime.now()
-            if state:
-                rgb = hsb2hex(hue, sat)
-                log("Hue", "send to tradfri: %s, %s" % (rgb, str(bri)))
-                self.tradfri.set_all(rgb, bri)
-            else:
-                rgb = hsb2hex(hue, sat)
-                log("Hue", "turn off")
-                self.tradfri.set_all(rgb, 0)
+        except UnknownColorException:
+            # ignore the unknown color, only print a message
+            log("Hue", "Unknown color, ignoring...")
+
+
+    def set_color(self, color):
+        """ Set all lights to color, color is a dict from COLORS_MAP """
+        color = COLORS_MAP[color]['hsb']
+        color['bri'] = self.bri
+        self.changed_now()
+        self.set_hsb(color)
+
+    def set_brightness(self, brightness):
+        """ Set all lights to the brightness, in range 0-100 """
+        if brightness > 255:
+            brightness == 255
+        elif brightness < 0:
+            brightness = 0
+        old = self.bridge.lights[self.main_light]()['state']
+        color = {'on': True,
+                 'hue': old['hue'],
+                 'sat': old['sat'],
+                 'bri': brightness
+                }
+        if brightness == 0:
+            color['on'] = False
+        self.changed_now()
+        self.set_hsb(color)
+
+    def color_next(self):
+        self.current_color_index = (self.current_color_index + 1) % len(COLORS_MAP)
+        self.set_color(self.current_color_index)
+
+    def color_prev(self):
+        self.current_color_index = (self.current_color_index - 1) % len(COLORS_MAP)
+        self.set_color(self.current_color_index)
+
+    def brightness_inc(self):
+        if self.bri < 255:
+            self.bri += round(254/self.brightness_steps)
+            # get around the rounding error and prevent going over 100
+            if self.bri > 230:
+                self.bri = 255
+            self.set_brightness(self.bri)
+
+    def brightness_dec(self):
+        if self.bri > 1:
+            self.bri -= round(254/self.brightness_steps)
+            # get around the rounding error and prevent going under 1
+            if self.bri < 25:
+                self.bri = 1
+            self.set_brightness(self.bri)
 
 

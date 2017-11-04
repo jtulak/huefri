@@ -31,6 +31,10 @@ from huefri.common import Config as Config
 from huefri.common import DELTA as DELTA
 from huefri.common import log as log
 from huefri.common import hex2hsb as hex2hsb
+from huefri.common import hex2index
+from huefri.common import COLORS_MAP
+from huefri.common import UnknownColorException
+
 
 
 class Tradfri(Hub):
@@ -59,6 +63,7 @@ class Tradfri(Hub):
 
         self.hue = hue
         self.threads = []
+        self.current_color_index = 0
 
         api_factory = APIFactory(ip)
         api_factory.psk = key
@@ -154,6 +159,7 @@ class Tradfri(Hub):
             change = True
             self.state = state
 
+        self.current_color_index = hex2index(color)
         if self.hue.last_changed > datetime.datetime.now() - DELTA:
             """ If the other side changed within DELTA time, any change
                 we found is likely caused by the sync and not by a manual
@@ -168,18 +174,66 @@ class Tradfri(Hub):
         """ Check if the main light changed since the last call of this function
             and if yes, propagate the change to other lights.
         """
-        if self.changed():
-            main = self._lights[self.main_light].light_control.lights[0]
+        try:
+            if self.changed():
+                main = self._lights[self.main_light].light_control.lights[0]
 
-            self.last_changed = datetime.datetime.now()
-            if main.state:
-                hsb = hex2hsb(main.hex_color, main.dimmer)
-                log("Tradfri", "send to hue: %s" % str(hsb))
+                self.last_changed = datetime.datetime.now()
+                hsb = None
+                if main.state:
+                    hsb = hex2hsb(main.hex_color, main.dimmer)
+                    log("Tradfri", "send to hue: %s" % str(hsb))
+                else:
+                    hsb = hex2hsb(main.hex_color, 0)
+                    log("Tradfri", "turn off")
+                    hsb['on'] = False
                 self.hue.set_hsb(hsb)
-            else:
-                hsb = hex2hsb(main.hex_color, 0)
-                log("Tradfri", "turn off")
-                self.hue.set_hsb({'on': False})
+
+        except UnknownColorException:
+            # ignore the unknown color, only print a message
+            log("Tradfri", "Unknown color, ignoring...")
+
+    def set_color(self, color):
+        """ Set all lights to color, color is a dict from COLORS_MAP """
+        color = COLORS_MAP[color]['hex']
+        bri = self.dimmer
+        self.changed_now()
+        self.set_all(color, self.dimmer)
+
+
+    def set_brightness(self, brightness):
+        """ Set all lights to the brightness, in range 0-100 """
+        if brightness > 255:
+            brightness == 255
+        elif brightness < 0:
+            brightness = 0
+
+        self.changed_now()
+        self.set_all(self.color, brightness)
+
+    def color_next(self):
+        self.current_color_index = (self.current_color_index + 1) % len(COLORS_MAP)
+        self.set_color(self.current_color_index)
+
+    def color_prev(self):
+        self.current_color_index = (self.current_color_index - 1) % len(COLORS_MAP)
+        self.set_color(self.current_color_index)
+
+    def brightness_inc(self):
+        if self.dimmer < 255:
+            self.dimmer += round(254/self.brightness_steps)
+            # get around the rounding error and prevent going over 100
+            if self.dimmer > 230:
+                self.dimmer = 255
+            self.set_brightness(self.dimmer)
+
+    def brightness_dec(self):
+        if self.dimmer > 1:
+            self.dimmer -= round(254/self.brightness_steps)
+            # get around the rounding error and prevent going under 1
+            if self.dimmer < 25:
+                self.dimmer = 1
+            self.set_brightness(self.dimmer)
 
     @property
     def _lights(self):
