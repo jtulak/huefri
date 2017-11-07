@@ -182,6 +182,7 @@ class Tradfri(Hub):
                 hsb = None
                 if main.state:
                     hsb = hex2hsb(main.hex_color, main.dimmer)
+                    hsb['on'] = True
                     log("Tradfri", "send to hue: %s" % str(hsb))
                 else:
                     hsb = hex2hsb(main.hex_color, 0)
