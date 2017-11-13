@@ -139,8 +139,6 @@ class Tradfri(Hub):
 
     def changed(self):
         """ Test whether there is any change since the last call. """
-        if self.hue is None:
-            raise HuefriException("Hue object was not passed to Tradfri.")
 
         self.observe(self._lights[self.main_light])
 
@@ -160,13 +158,14 @@ class Tradfri(Hub):
             self.state = state
 
         self.current_color_index = hex2index(color)
-        if self.hue.last_changed > datetime.datetime.now() - DELTA:
-            """ If the other side changed within DELTA time, any change
-                we found is likely caused by the sync and not by a manual
-                control.  So, skip any operation.
-            """
-            log("Tradfri", "hue sync skipped")
-            change = False
+        if self.hue is not None:
+            if self.hue.last_changed > datetime.datetime.now() - DELTA:
+                """ If the other side changed within DELTA time, any change
+                    we found is likely caused by the sync and not by a manual
+                    control.  So, skip any operation.
+                """
+                log("Tradfri", "hue sync skipped")
+                change = False
 
         return change
 
@@ -174,6 +173,8 @@ class Tradfri(Hub):
         """ Check if the main light changed since the last call of this function
             and if yes, propagate the change to other lights.
         """
+        if self.hue is None:
+            raise HuefriException("Hue object was not passed to Tradfri.")
         try:
             if self.changed():
                 main = self._lights[self.main_light].light_control.lights[0]
