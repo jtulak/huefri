@@ -87,6 +87,8 @@ For Tradfri secret code (16 characters long string), look at
 [pytradfri](https://github.com/ggravlingen/pytradfri) readme. (This is a
 temporary hotfix after IKEA and pytradfri changed API. Proper changes coming.)
 
+To find out the IDs of tradfri lights, which are changing after every restart of the Tradfri gateway, you can use `identify.py` script. This script will blink every light few times and print out the ID of currently blinking light into the console.
+
 ## Use as a library
 You can use this project as library too:
 ~~~~
