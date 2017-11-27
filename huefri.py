@@ -37,6 +37,9 @@ from huefri.tradfri import Tradfri as Tradfri
 
 def main():
     initialized = False
+    Config.path = os.path.join(
+                    os.path.dirname(os.path.realpath(__file__)),
+                    "config.json")
     """
         Forever check the main light and update Hue lights.
     """
@@ -44,8 +47,8 @@ def main():
         while True:
             try:
                 if not initialized:
-                    hue = Hue.autoinit()
-                    tradfri = Tradfri.autoinit(hue)
+                    hue = Hue.autoinit(Config)
+                    tradfri = Tradfri.autoinit(Config, hue)
                     hue.set_tradfri(tradfri)
                     initialized = True
                 else:

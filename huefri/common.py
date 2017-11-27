@@ -118,22 +118,25 @@ class BadConfigPathError(IOError):
 
 class Config(object):
 
-    _config = None
+    path = None
+    _loaded = False
+    _state = None
 
     def __init__(self):
         raise Exception("Config is a singleton, do not initializate it.")
 
     @classmethod
-    def load_json(cls, configfile):
+    def get(cls):
         """
             Populate the config object from a json file.
         """
         error = None
+        if cls._state is not None:
+            return cls._state
         try:
-            with open(configfile, 'r') as h:
+            with open(cls.path, 'r') as h:
                 json_data = h.read()
-                cls._config = json.loads(json_data)
-                return cls._config
+                cls._state = json.loads(json_data)
         except IOError:
             error = BadConfigPathError
             log("Config", "Can't open the config. Please, create a json file next to this script.\n")
@@ -141,7 +144,8 @@ class Config(object):
             error = ex
             log("Config", "Can't parse the config.\n")
 
-        log("Config", """File config.json should contain:
+        if error:
+            log("Config", """File config.json should contain:
 {
 "hue":{
 	"addr":"ADDR",
@@ -157,20 +161,5 @@ class Config(object):
 	}
 }
 """)
-        raise error
-
-    @classmethod
-    def get(cls):
-        """
-            Return json object with config.
-        """
-        if cls._config is not None:
-            return cls._config
-        else:
-            configfile = os.path.join(
-                    os.path.dirname(os.path.realpath(__file__)),
-                    "..",
-                    "config.json")
-            cls.load_json(configfile)
-            return cls._config
-
+            raise error
+        return cls._state

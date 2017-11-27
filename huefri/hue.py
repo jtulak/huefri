@@ -66,9 +66,9 @@ class Hue(Hub):
         self.tradfri = tradfri
 
     @classmethod
-    def autoinit(cls, tradfri: 'Tradfri' = None):
+    def autoinit(cls, cnf: Config, tradfri: 'Tradfri' = None):
         """ Get the constructor arguments automatically from Config class. """
-        config = Config.get()
+        config = cnf.get()
         return cls(config['hue']['addr'],
             config['hue']['secret'],
             config['hue']['main'],

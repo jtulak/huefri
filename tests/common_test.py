@@ -37,12 +37,14 @@ class TestConfig(unittest.TestCase):
 
     def test_bad_path(self):
         with self.assertRaises(huefri.common.BadConfigPathError):
-            huefri.common.Config.load_json("foobarbadconfig")
+            huefri.common.Config.path = "foobar"
+            huefri.common.Config.get()
 
     def test_bad_content(self):
         with self.assertRaises(json.decoder.JSONDecodeError):
             with mock.patch('huefri.common.open', mock.mock_open(read_data='bibble')) as m:
-                huefri.common.Config.load_json("foobarbadconfig")
+                huefri.common.Config.path = "foobar"
+                huefri.common.Config.get()
 
     def test_good_file(self):
         config="""{
@@ -60,7 +62,8 @@ class TestConfig(unittest.TestCase):
             }
         }"""
         with mock.patch('huefri.common.open', mock.mock_open(read_data=config)) as m:
-            huefri.common.Config.load_json("foobargoodconfig")
+            huefri.common.Config.path = "foobar"
+            huefri.common.Config.get()
             self.assertEqual("hue", huefri.common.Config.get()['hue']['addr'])
             self.assertEqual("SECRET2", huefri.common.Config.get()['tradfri']['secret'])
 

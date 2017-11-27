@@ -26,6 +26,7 @@ import dummy
 import huefri
 import huefri.common
 from huefri.hue import Hue
+from huefri.common import Config
 from huefri.common import DELTA as DELTA
 
 
@@ -36,7 +37,7 @@ class TestHue(unittest.TestCase):
         self.fnt_log = huefri.common.log
         huefri.common.log = lambda x,y: None
         huefri.hue.log = lambda x,y: None
-        huefri.common.Config._config = json.loads("""{
+        huefri.common.Config._state = json.loads("""{
             "hue":{
                 "addr":"hue",
                 "secret": "SECRET1",
@@ -61,7 +62,7 @@ class TestHue(unittest.TestCase):
         self.cls_map = huefri.common.COLORS_MAP
         huefri.common.COLORS_MAP = self.map
         with mock.patch('qhue.Bridge', dummy.Bridge) as m:
-            self.hue = Hue.autoinit()
+            self.hue = Hue.autoinit(Config)
 
     def tearDown(self):
         huefri.common.COLORS_MAP = self.cls_map
@@ -69,7 +70,7 @@ class TestHue(unittest.TestCase):
 
     def test_init(self):
         with mock.patch('qhue.Bridge', dummy.Bridge) as m:
-            hue = Hue.autoinit()
+            hue = Hue.autoinit(Config)
         self.assertEqual('hue', hue.ip)
         self.assertIsNone(hue.hue)
         self.assertIsNone(hue.tradfri)

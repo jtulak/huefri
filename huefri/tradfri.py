@@ -79,7 +79,7 @@ class Tradfri(Hub):
         self.dimmer = None
 
     @classmethod
-    def autoinit(cls, hue: 'Hue' = None):
+    def autoinit(cls, cnf: Config, hue: 'Hue' = None):
         """ Get the constructor arguments automatically from Config class.
             Parameters
             ----------
@@ -87,7 +87,7 @@ class Tradfri(Hub):
                 The Hue instance we are controlling with the main light.
         """
 
-        config = Config.get()
+        config = cnf.get()
         return cls(config['tradfri']['addr'],
                 config['tradfri']['secret'],
                 config['tradfri']['main'],

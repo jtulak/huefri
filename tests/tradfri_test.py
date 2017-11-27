@@ -23,6 +23,7 @@ import json
 import dummy
 import huefri
 import huefri.common
+from huefri.common import Config
 from huefri.tradfri import Tradfri
 
 
@@ -33,7 +34,7 @@ class TestTradfri(unittest.TestCase):
         self.fnt_log = huefri.common.log
         huefri.common.log = lambda x,y: None
         huefri.tradfri.log = lambda x,y: None
-        huefri.common.Config._config = json.loads("""{
+        huefri.common.Config._state = json.loads("""{
             "hue":{
                 "addr":"hue",
                 "secret": "SECRET1",
@@ -59,7 +60,7 @@ class TestTradfri(unittest.TestCase):
         huefri.common.COLORS_MAP = self.map
         with mock.patch('huefri.tradfri.APIFactory', dummy.TAPIFactory) as m:
             with mock.patch('huefri.tradfri.Gateway', dummy.Gateway) as n:
-                self.tradfri = Tradfri.autoinit()
+                self.tradfri = Tradfri.autoinit(Config)
                 self.tradfri.gateway.api = self.tradfri.api
 
     def tearDown(self):
@@ -69,7 +70,7 @@ class TestTradfri(unittest.TestCase):
     def test_init(self):
         with mock.patch('huefri.tradfri.APIFactory', dummy.TAPIFactory) as m:
             with mock.patch('huefri.tradfri.Gateway', dummy.Gateway) as n:
-                tradfri = Tradfri.autoinit()
+                tradfri = Tradfri.autoinit(Config)
         self.assertEqual('tradfri', tradfri.api.ip)
         self.assertIsNone(tradfri.color)
         self.assertTrue(isinstance(tradfri.gateway, dummy.Gateway))
