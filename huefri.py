@@ -36,31 +36,28 @@ from huefri.hue import Hue as Hue
 from huefri.tradfri import Tradfri as Tradfri
 
 def main():
-
-    try:
-        hue = Hue.autoinit()
-        tradfri = Tradfri.autoinit(hue)
-        hue.set_tradfri(tradfri)
-    except HuefriException:
-        # message is already printed
-        sys.exit(1)
-    except pytradfri.error.ClientError as e:
-        print("An error occured when initializing Tradfri: %s" % str(e))
-        sys.exit(1)
-
+    initialized = False
     """
         Forever check the main light and update Hue lights.
     """
     try:
         while True:
             try:
-                tradfri.update()
-                hue.update()
+                if not initialized:
+                    hue = Hue.autoinit()
+                    tradfri = Tradfri.autoinit(hue)
+                    hue.set_tradfri(tradfri)
+                    initialized = True
+                else:
+                    tradfri.update()
+                    hue.update()
+            except pytradfri.error.ClientError as e:
+                print("An error occured with Tradfri: %s" % str(e))
             except pytradfri.error.RequestTimeout:
                 """ This exception is raised here and there and doesn't cause anything.
                     So print just a short notice, not a full stacktrace.
                 """
-                log("MAIN", "Tradfri RequestTimeout().")
+                log("MAIN", "Tradfri request timeout, retrying...")
             except Exception as err:
                 traceback.print_exc()
                 log("MAIN", err)
