@@ -18,7 +18,7 @@
 #
 
 import unittest
-from unittest import mock as mock
+from unittest import mock
 import json
 import datetime
 
@@ -27,7 +27,7 @@ import huefri
 import huefri.common
 from huefri.hue import Hue
 from huefri.common import Config
-from huefri.common import DELTA as DELTA
+from huefri.common import DELTA
 
 
 

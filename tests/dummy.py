@@ -19,7 +19,7 @@
 
 
 import datetime
-from huefri.common import DELTA as DELTA
+from huefri.common import DELTA
 
 class DummyHub(object):
     """ mock of Hue and Tradfri classes """

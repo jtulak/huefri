@@ -25,12 +25,12 @@ import threading
 from pytradfri import Gateway
 from pytradfri.api.libcoap_api import APIFactory
 
-from huefri.common import Hub as Hub
-from huefri.common import HuefriException as HuefriException
-from huefri.common import Config as Config
-from huefri.common import DELTA as DELTA
-from huefri.common import log as log
-from huefri.common import hex2hsb as hex2hsb
+from huefri.common import Hub
+from huefri.common import HuefriException
+from huefri.common import Config
+from huefri.common import DELTA
+from huefri.common import log
+from huefri.common import hex2hsb
 from huefri.common import hex2index
 from huefri.common import COLORS_MAP
 from huefri.common import UnknownColorException

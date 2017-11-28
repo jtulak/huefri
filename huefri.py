@@ -29,11 +29,11 @@ import traceback
 import json
 
 import huefri
-from huefri.common import Config as Config
-from huefri.common import HuefriException as HuefriException
-from huefri.common import log as log
-from huefri.hue import Hue as Hue
-from huefri.tradfri import Tradfri as Tradfri
+from huefri.common import Config
+from huefri.common import HuefriException
+from huefri.common import log
+from huefri.hue import Hue
+from huefri.tradfri import Tradfri
 
 def main():
     initialized = False

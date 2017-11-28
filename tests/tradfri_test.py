@@ -18,7 +18,7 @@
 #
 
 import unittest
-from unittest import mock as mock
+from unittest import mock
 import json
 import dummy
 import huefri
