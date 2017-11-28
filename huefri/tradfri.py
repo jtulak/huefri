@@ -70,9 +70,8 @@ class Tradfri(Hub):
         self.api = api_factory.request
         self.gateway = Gateway()
 
-        devices_command = self.gateway.get_devices()
-        devices_commands = self.api(devices_command)
-        self._devices = self.api(devices_commands)
+        # ehh... nasty encapsulation :-/
+        self._devices = self.api(self.api(self.gateway.get_devices()))
 
         self.color = None
         self.state = None
