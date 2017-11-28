@@ -87,7 +87,11 @@ For Tradfri secret code (16 characters long string), look at
 [pytradfri](https://github.com/ggravlingen/pytradfri) readme. (This is a
 temporary hotfix after IKEA and pytradfri changed API. Proper changes coming.)
 
-To find out the IDs of tradfri lights, which are changing after every restart of the Tradfri gateway, you can use `identify.py` script. This script will blink every light few times and print out the ID of currently blinking light into the console.
+Because Tradfri gateway is changing the order of bulbs after every reboot,
+Huefri sorts the bulb using numbers in their names. That is, it takes a name of
+a bulb, strips everything that is not a number (making `123` from `foo1 bar 23`)
+and then sorting this number. Use the Android/iOS application to rename your bulbs
+however you want.
 
 ## Use as a library
 You can use this project as library too:

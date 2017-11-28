@@ -25,6 +25,7 @@ import huefri
 import huefri.common
 from huefri.common import Config
 from huefri.tradfri import Tradfri
+from random import shuffle
 
 
 
@@ -138,4 +139,13 @@ class TestTradfri(unittest.TestCase):
             self.tradfri.set_all("f5faf6", 150)
             self.tradfri.update()
             self.assertEqual({'on': True, 'hue':  6188, 'sat': 249, 'bri': 100}, self.tradfri.hue.hsb)
+
+    def test_sort_by_name(self):
+        # sorted... probably works, because the dummy lights are in order
+        names = [l.name for l in self.tradfri._lights]
+        self.assertEqual([str(x) for x in range(10)], names)
+        # randomize the order and try again
+        shuffle(self.tradfri.api.lights)
+        names = [l.name for l in self.tradfri._lights]
+        self.assertEqual([str(x) for x in range(10)], names)
 

@@ -71,12 +71,13 @@ class Bridge(object):
 
 # Tradfri section
 class TLight(object):
-    def __init__(self):
+    def __init__(self, name = ""):
         self.color = None
         self.dimmer = None
         self.state = None
         self.has_light_control = True
         self.lights = [self]
+        self.name = name
 
     @property
     def hex_color(self):
@@ -106,7 +107,7 @@ class TAPI(object):
         self.ip = ip
         self.secret = secret
         self.request = self
-        self.lights = [TLight() for x in range(0,10)]
+        self.lights = [TLight(name=str(x)) for x in range(10)]
 
     def __call__(self, arg):
         return self.lights

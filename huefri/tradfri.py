@@ -20,6 +20,7 @@
 import time
 import datetime
 import os
+import re
 import threading
 
 from pytradfri import Gateway
@@ -238,4 +239,9 @@ class Tradfri(Hub):
 
     @property
     def _lights(self):
-        return [dev for dev in self._devices if dev.has_light_control]
+        """ Get lights attached to this gateway, sorted by numbers in their names. """
+        prog = re.compile(r'[^\d]+')
+        raw = [(int(prog.sub('', dev.name)), dev) for dev in self._devices if dev.has_light_control]
+        raw.sort(key=lambda p: p[0]) # sort in place
+        return [dev for (x, dev) in raw]
+
