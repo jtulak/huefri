@@ -195,6 +195,10 @@ class Tradfri(Hub):
             # ignore the unknown color, only print a message
             log("Tradfri", "Unknown color, ignoring...")
 
+    def reboot(self):
+        """ Reboot the gateway """
+        self.api(self.gateway.reboot())
+
     def set_color(self, color):
         """ Set all lights to color, color is a dict from COLORS_MAP """
         color = COLORS_MAP[color]['hex']
@@ -244,4 +248,3 @@ class Tradfri(Hub):
         raw = [(int(prog.sub('', dev.name)), dev) for dev in self._devices if dev.has_light_control]
         raw.sort(key=lambda p: p[0]) # sort in place
         return [dev for (x, dev) in raw]
-

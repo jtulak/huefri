@@ -61,6 +61,10 @@ def main():
                     So print just a short notice, not a full stacktrace.
                 """
                 log("MAIN", "Tradfri request timeout, retrying...")
+            except IndexError as err:
+                log("MAIN", err)
+                log("MAIN", "reinitializing")
+                initialized = False
             except Exception as err:
                 traceback.print_exc()
                 log("MAIN", err)
@@ -71,4 +75,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

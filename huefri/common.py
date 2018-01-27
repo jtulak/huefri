@@ -139,7 +139,9 @@ class Config(object):
                 cls._state = json.loads(json_data)
         except IOError:
             error = BadConfigPathError
-            log("Config", "Can't open the config. Please, create a json file next to this script.\n")
+            log("Config",
+                "Can't open the config '%s'. Please, create a json file next to this script.\n" %
+                cls.path)
         except json.JSONDecodeError as ex:
             error = ex
             log("Config", "Can't parse the config.\n")
