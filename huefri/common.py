@@ -157,6 +157,7 @@ class Config(object):
 	},
 "tradfri":{
 	"addr": "ADDR",
+    "identity": "IDENTITY",
 	"secret": "SECRET",
 	"controlled": [LIST,OF,TRADFRI,LIGHTS,TO,CONTROL (indexed from 0) ]
 	"main": WATCHED TRADFRI BULB (indexed from 0)

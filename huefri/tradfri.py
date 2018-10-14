@@ -22,7 +22,9 @@ import datetime
 import os
 import re
 import threading
+import uuid
 
+import pytradfri
 from pytradfri import Gateway
 from pytradfri.api.libcoap_api import APIFactory
 
@@ -37,19 +39,47 @@ from huefri.common import COLORS_MAP
 from huefri.common import UnknownColorException
 
 
+class AccessDenied(Exception):
+    """ Exception raised when the gateway key is not configured correctly. """
+    pass
+
+def firsttime_config(cnf):
+    print("Enter the 'Security Code' from the back of your Tradfri gateway: ")
+    key = input().strip()
+    if len(key) != 16:
+        raise AccessDenied("Invalid 'Security Code' provided.")
+
+    identity = uuid.uuid4().hex
+    config = cnf.get()
+    api_factory = pytradfri.api.libcoap_api.APIFactory(host=config['tradfri']['addr'], psk_id=identity)
+    try:
+        psk = api_factory.generate_psk(key)
+        print('Generated PSK: ', psk)
+
+        print("In your config ({file}), set tradfri/identity to {id} and secret to {key}.".format(
+            file=cnf.path, id=identity, key=psk))
+    except AttributeError:
+        raise AccessDenied("Invalid 'Security Code' provided.")
+    except pytradfri.error.RequestTimeout as e:
+        print("Gateway timeout. Either the address is not reachable, or the Security Code is not correct.")
+        raise
+
 
 class Tradfri(Hub):
     """ Class for Tradfri lights """
 
-    def __init__(self, ip: str, key: str, main_light: int, lights: list, hue: 'Hue' = None):
+    def __init__(self, ip: str, identity: str, key: str, main_light: int, lights: list, hue: 'Hue' = None):
         """
             Parameters
             ----------
             ip : str
                 Address of Tradfri gate. DNS will be resolved.
 
+            identity: str
+                The identity string generated when pairing.
+
             key : str
-                The secret string written on the back of the gate.
+                The secret string generated when pairing.
 
             main_lights : int
                 The light we want to watch and copy changes from.
@@ -61,12 +91,13 @@ class Tradfri(Hub):
                 The Hue instance we are controlling with the main light.
         """
         super().__init__(ip, key, main_light, lights)
+        self.identity = identity
 
         self.hue = hue
         self.threads = []
         self.current_color_index = 0
 
-        api_factory = APIFactory(ip)
+        api_factory = APIFactory(host=ip, psk_id=identity, psk=key)
         api_factory.psk = key
         self.api = api_factory.request
         self.gateway = Gateway()
@@ -88,7 +119,12 @@ class Tradfri(Hub):
         """
 
         config = cnf.get()
+        if not config['tradfri']['secret'] or not config['tradfri']['identity']:
+            raise AccessDenied("Configuration file {file} does not contain Tradfri secret.".format(
+                file=cnf.path
+            ))
         return cls(config['tradfri']['addr'],
+                config['tradfri']['identity'],
                 config['tradfri']['secret'],
                 config['tradfri']['main'],
                 config['tradfri']['controlled'],

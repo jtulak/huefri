@@ -72,7 +72,10 @@ def main():
                             tradfri.blink(step, i)
                             step += 1
                             time.sleep(1)
-
+            except huefri.tradfri.AccessDenied as e:
+                print(e)
+                huefri.tradfri.firsttime_config(Config)
+                sys.exit(0)
             except pytradfri.error.ClientError as e:
                 print("An error occured with Tradfri: %s" % str(e))
             except pytradfri.error.RequestTimeout:
@@ -90,4 +93,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

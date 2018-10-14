@@ -44,7 +44,7 @@ Note: I have only Color Ambiance Hue bulbs. If White Ambiance bulbs won't work o
 ## Dependencies
   * Python 3
   * [qhue](https://github.com/quentinsf/qhue) version 1.x
-  * [pytradfri](https://github.com/ggravlingen/pytradfri) version 4.x
+  * [pytradfri](https://github.com/ggravlingen/pytradfri) version 6.x
 
 ## Instalation
 1. Get all HW working on its own.
@@ -64,6 +64,7 @@ This is a template for `config.json` file that has to be located next to `huefri
 	},
 "tradfri":{
 	"addr": "ADDR",
+	"identity": "IDENTITY",
 	"secret": "SECRET",
 	"controlled": [LIST,OF,TRADFRI,LIGHTS,TO,CONTROL (indexed from 0) ]
 	"main": WATCHED TRADFRI BULB (indexed from 0)
@@ -77,15 +78,15 @@ from phue import Bridge
 
 b = Bridge('ip_of_your_bridge')
 
-# Press the button on the bridge and call connect() 
+# Press the button on the bridge and call connect()
 # within 30 seconds (this only needs to be run a single time).
 # The secret will be saved into HOME_DIR/.python_hue file.
 b.connect()
 ~~~~
 
-For Tradfri secret code (16 characters long string), look at
-[pytradfri](https://github.com/ggravlingen/pytradfri) readme. (This is a
-temporary hotfix after IKEA and pytradfri changed API. Proper changes coming.)
+For Tradfri secret code (16 characters long string), huefri will guide you if
+the identity or secret fields in config file are empty. You will need the
+Security Code printed on the back of your gateway.
 
 Because Tradfri gateway is changing the order of bulbs after every reboot,
 Huefri sorts the bulb using numbers in their names. That is, it takes a name of
