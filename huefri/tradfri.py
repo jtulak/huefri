@@ -109,6 +109,8 @@ class Tradfri(Hub):
         self.state = None
         self.dimmer = None
 
+        self._skipped_devs = []
+
     @classmethod
     def autoinit(cls, cnf: Config, hue: 'Hue' = None):
         """ Get the constructor arguments automatically from Config class.
@@ -281,6 +283,18 @@ class Tradfri(Hub):
     def _lights(self):
         """ Get lights attached to this gateway, sorted by numbers in their names. """
         prog = re.compile(r'[^\d]+')
-        raw = [(int(prog.sub('', dev.name)), dev) for dev in self._devices if dev.has_light_control]
+        raw = []
+        for dev in self._devices:
+            # not a light
+            if not dev.has_light_control:
+                continue
+            # bad name format
+            if dev.name in self._skipped_devs:
+                continue
+            try:
+                raw.append((int(prog.sub('', dev.name)), dev))
+            except ValueError:
+                log("Tradfri", "The name of bulb '{}' does not contain any number, skipping...".format(dev.name))
+                self._skipped_devs.append(dev.name)
         raw.sort(key=lambda p: p[0]) # sort in place
         return [dev for (x, dev) in raw]
