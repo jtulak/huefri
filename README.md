@@ -1,3 +1,6 @@
+# This repo is archived. 
+It probably no longer works as IKEA API changed over the time. The world is a different place than 7 years ago and it's rather easy to add one bulb to another brand's hub, or to build a custom stuff with Home Assistant and so on.
+
 # Huëfri
 A simple software bridge to unify IKEA Trådfri and Philips Hue lights.
 
